@@ -91,13 +91,10 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 final String name = data.getStringExtra(NameActivity.KEY).trim();
-                final Context context = this;
-
-                names.add(name);
                 dao.insert(new Name(name))
                         .subscribeOn(Schedulers.from(executorService))
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new DbInsertCompleteObserver(context, adapter, names));
+                        .subscribe(new DbInsertCompleteObserver(this, name));
 
             } else {
                 Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
@@ -107,14 +104,12 @@ public class MainActivity extends AppCompatActivity {
 
     private class DbInsertCompleteObserver implements CompletableObserver {
 
-        private List<String> names;
         private Context context;
-        private NameAdapter adapter;
+        private String name;
 
-        DbInsertCompleteObserver(Context context, NameAdapter adapter, List<String> names) {
-            this.names = names;
+        DbInsertCompleteObserver(Context context, String name) {
             this.context = context;
-            this.adapter = adapter;
+            this.name = name;
         }
 
         @Override
@@ -122,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onComplete() {
+            names.add(name);
             adapter.setNames(names);
-            adapter.notifyDataSetChanged();
         }
 
         @Override
@@ -151,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
         public void onNext(List<String> names) {
             Log.d(LOG_TAG, names.size() + "");
             adapter.setNames(names);
-            adapter.notifyDataSetChanged();
         }
 
         @Override

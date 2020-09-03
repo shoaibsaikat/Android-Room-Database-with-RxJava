@@ -14,6 +14,7 @@ public class NameAdapter extends RecyclerView.Adapter<NameViewHolder> {
 
     public void setNames(List<String> names) {
         this.names = names;
+        notifyDataSetChanged();
     }
 
     @NonNull
