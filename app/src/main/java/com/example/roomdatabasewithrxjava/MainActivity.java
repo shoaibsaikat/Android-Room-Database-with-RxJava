@@ -27,6 +27,8 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.FlowableSubscriber;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.example.roomdatabasewithrxjava.NameDatabase.DB_NAME;
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         names = new ArrayList<>();
-        executorService = new ThreadPoolExecutor(4, 5, 60, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
 
         db = Room.databaseBuilder(this, NameDatabase.class, DB_NAME)
                 .fallbackToDestructiveMigration()
@@ -67,6 +68,15 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         updateObserver = new DbUpdateObserver(adapter);
+
+        executorService = new ThreadPoolExecutor(4, 5, 60, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+
+        RxJavaPlugins.setErrorHandler(new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Log.e(LOG_TAG, throwable.getMessage());
+            }
+        });
     }
 
     @Override
@@ -77,6 +87,13 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.from(executorService))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(updateObserver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        executorService.shutdown();
     }
 
     public void onAddClicked(View view) {
