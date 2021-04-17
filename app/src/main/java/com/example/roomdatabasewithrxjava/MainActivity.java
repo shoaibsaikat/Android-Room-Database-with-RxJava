@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(LOG_TAG, throwable.getMessage());
             }
         });
+
+        getSupportActionBar().hide();
     }
 
     @Override
